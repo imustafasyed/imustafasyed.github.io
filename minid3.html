@@ -6,8 +6,10 @@
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; transition: background-color 0.5s; }
     .vis-container { border: 2px solid #ccc; margin: 20px 0; padding: 20px; background-color: white; }
-    h2 { color: #333; }
-    /* Added some specific styling to the D3 container to make it clear where to click */
+    h2 { color: #333; margin-bottom: 5px; }
+    /* Styling for the new click counter */
+    #click-counter { color: #666; font-size: 1.1em; margin-bottom: 15px; }
+    
     #test-vis {
         border: 1px dashed #aaa;
         cursor: crosshair;
@@ -22,6 +24,8 @@
   
   <div class="vis-container">
     <h2>Click the canvas to add circles (Max 10)</h2>
+    <div id="click-counter">Total Clicks: 0</div>
+    
     <div id="test-vis"></div>
   </div>
 
@@ -36,23 +40,22 @@
     const width = 800;
     const height = 600;
     let svg;
+    
+    // Create a variable to keep track of the clicks
+    let totalClicks = 0;
 
     async function prepareVis() {
         try {
-            // 1. Initialize the SVG canvas inside your template's container
             svg = d3.select("#test-vis")
                 .append("svg")
                 .attr("width", width)
                 .attr("height", height)
-                // Attach the click event listener to the whole canvas
                 .on("click", handleSvgClick);
             
-            // 2. Trigger the success UI changes from your template
             console.log("SUCCESS: D3 Canvas rendered!");
             document.body.style.background = "#e6ffe6"; 
             
         } catch (error) {
-            // 3. Trigger the error UI changes from your template if D3 fails
             console.error("ERROR:", error);
             document.getElementById('error-log').style.display = 'block';
             document.getElementById('error-text').textContent = error.toString() + "\n\n" + error.stack;
@@ -61,15 +64,14 @@
     }
 
     function handleSvgClick(event) {
-        // Get the exact X and Y coordinates of the mouse click relative to the SVG
-        const [x, y] = d3.pointer(event);
+        // Increment the click tracker and update the HTML text
+        totalClicks++;
+        document.getElementById("click-counter").textContent = `Total Clicks: ${totalClicks}`;
 
-        // Select all existing circles on the canvas
+        const [x, y] = d3.pointer(event);
         const circles = svg.selectAll("circle");
         
-        // Enforce the maximum of 10 circles rule
         if (circles.size() >= 10) {
-            // Select the oldest circle (first in the DOM) and remove it with a shrinking animation
             svg.select("circle")
                .transition()
                .duration(200)
@@ -77,17 +79,16 @@
                .remove();
         }
 
-        // Append a new circle exactly where the user clicked
         svg.append("circle")
             .attr("cx", x)
             .attr("cy", y)
-            .attr("r", 0) // Start at radius 0 for a smooth pop-in animation
+            .attr("r", 0) 
             .attr("fill", "steelblue") 
             .attr("opacity", 0.8)
-            .transition() // Animate the circle growing
+            .transition() 
             .duration(500)
             .ease(d3.easeElasticOut)
-            .attr("r", 20); // Grow to target radius
+            .attr("r", 20); 
     }
 
     async function runApp() {
