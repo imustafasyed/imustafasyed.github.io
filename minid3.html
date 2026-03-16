@@ -7,8 +7,7 @@
     body { font-family: Arial, sans-serif; padding: 20px; transition: background-color 0.5s; }
     .vis-container { border: 2px solid #ccc; margin: 20px 0; padding: 20px; background-color: white; }
     h2 { color: #333; margin-bottom: 5px; }
-    /* Styling for the new click counter */
-    #click-counter { color: #666; font-size: 1.1em; margin-bottom: 15px; }
+    #click-counter { color: #666; font-size: 1.1em; margin-bottom: 15px; font-weight: bold; }
     
     #test-vis {
         border: 1px dashed #aaa;
@@ -24,7 +23,7 @@
   
   <div class="vis-container">
     <h2>Click the canvas to add circles (Max 10)</h2>
-    <div id="click-counter">Total Clicks: 0</div>
+    <div id="click-counter">Total Circles: 0 / 10</div>
     
     <div id="test-vis"></div>
   </div>
@@ -40,8 +39,6 @@
     const width = 800;
     const height = 600;
     let svg;
-    
-    // Create a variable to keep track of the clicks
     let totalClicks = 0;
 
     async function prepareVis() {
@@ -64,21 +61,23 @@
     }
 
     function handleSvgClick(event) {
-        // Increment the click tracker and update the HTML text
-        totalClicks++;
-        document.getElementById("click-counter").textContent = `Total Clicks: ${totalClicks}`;
-
-        const [x, y] = d3.pointer(event);
+        // Check how many circles currently exist on the canvas
         const circles = svg.selectAll("circle");
         
+        // If we already have 10 circles, stop the function right here
         if (circles.size() >= 10) {
-            svg.select("circle")
-               .transition()
-               .duration(200)
-               .attr("r", 0)
-               .remove();
+            alert("Maximum limit of 10 circles reached! You cannot add any more.");
+            return; // This early return prevents the rest of the code from running
         }
 
+        // Increment the tracker and update the HTML text
+        totalClicks++;
+        document.getElementById("click-counter").textContent = `Total Circles: ${totalClicks} / 10`;
+
+        // Get the click coordinates
+        const [x, y] = d3.pointer(event);
+
+        // Append the new circle
         svg.append("circle")
             .attr("cx", x)
             .attr("cy", y)
