@@ -1,81 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>D3 Circle Interaction</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 40px;
-        }
-        #canvas-container {
-            border: 2px solid #333;
-            background-color: #f4f4f9;
-            cursor: crosshair;
-            box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
-        }
-    </style>
+  <meta charset="utf-8">
+  <title>D3 Circle Interaction</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; transition: background-color 0.5s; }
+    .vis-container { border: 2px solid #ccc; margin: 20px 0; padding: 20px; background-color: white; }
+    h2 { color: #333; }
+    /* Added some specific styling to the D3 container to make it clear where to click */
+    #test-vis {
+        border: 1px dashed #aaa;
+        cursor: crosshair;
+        width: 800px;
+        height: 600px;
+        background-color: #fafafa;
+    }
+  </style>
 </head>
 <body>
+  <h1>D3 Circle Animation</h1>
+  
+  <div class="vis-container">
     <h2>Click the canvas to add circles (Max 10)</h2>
-    <div id="canvas-container"></div>
+    <div id="test-vis"></div>
+  </div>
 
-    <script type="module">
-        import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+  <div id="error-log" style="background: #ffe6e6; padding: 15px; margin: 20px 0; display: none;">
+    <h3>Error Log:</h3>
+    <pre id="error-text"></pre>
+  </div>
 
-        const width = 800;
-        const height = 600;
-        let svg;
+  <script type="module">
+    import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
-        async function prepareVis() {
-            // Set attributes for D3 container canvas
-            svg = d3.select("#canvas-container")
+    const width = 800;
+    const height = 600;
+    let svg;
+
+    async function prepareVis() {
+        try {
+            // 1. Initialize the SVG canvas inside your template's container
+            svg = d3.select("#test-vis")
                 .append("svg")
                 .attr("width", width)
                 .attr("height", height)
-                // Attach the click listener to the entire SVG canvas
-                .on("click", handleSvgClick); 
-        }
-
-        function handleSvgClick(event) {
-            // Get exact coordinates relative to the SVG container
-            const [x, y] = d3.pointer(event);
-
-            // Check current number of circles on the canvas
-            const circles = svg.selectAll("circle");
+                // Attach the click event listener to the whole canvas
+                .on("click", handleSvgClick);
             
-            // Enforce the maximum of 10 circles rule by removing the oldest
-            if (circles.size() >= 10) {
-                // Select the first circle in the DOM, shrink it, and remove it
-                svg.select("circle")
-                   .transition()
-                   .duration(200)
-                   .attr("r", 0)
-                   .remove();
-            }
+            // 2. Trigger the success UI changes from your template
+            console.log("SUCCESS: D3 Canvas rendered!");
+            document.body.style.background = "#e6ffe6"; 
+            
+        } catch (error) {
+            // 3. Trigger the error UI changes from your template if D3 fails
+            console.error("ERROR:", error);
+            document.getElementById('error-log').style.display = 'block';
+            document.getElementById('error-text').textContent = error.toString() + "\n\n" + error.stack;
+            document.body.style.background = "#ffe6e6";
+        }
+    }
 
-            // Append a new circle at the exact click coordinates
-            svg.append("circle")
-                .attr("cx", x)
-                .attr("cy", y)
-                .attr("r", 0) // Start at radius 0 for a pop-in animation
-                .attr("fill", d3.interpolateRainbow(Math.random())) // Random color
-                .attr("opacity", 0.8)
-                .transition() // Add a smooth animation
-                .duration(500)
-                .ease(d3.easeElasticOut)
-                .attr("r", 25); // Grow to target radius
+    function handleSvgClick(event) {
+        // Get the exact X and Y coordinates of the mouse click relative to the SVG
+        const [x, y] = d3.pointer(event);
+
+        // Select all existing circles on the canvas
+        const circles = svg.selectAll("circle");
+        
+        // Enforce the maximum of 10 circles rule
+        if (circles.size() >= 10) {
+            // Select the oldest circle (first in the DOM) and remove it with a shrinking animation
+            svg.select("circle")
+               .transition()
+               .duration(200)
+               .attr("r", 0)
+               .remove();
         }
 
-        async function runApp() {
-            await prepareVis();
-        }
+        // Append a new circle exactly where the user clicked
+        svg.append("circle")
+            .attr("cx", x)
+            .attr("cy", y)
+            .attr("r", 0) // Start at radius 0 for a smooth pop-in animation
+            .attr("fill", "steelblue") 
+            .attr("opacity", 0.8)
+            .transition() // Animate the circle growing
+            .duration(500)
+            .ease(d3.easeElasticOut)
+            .attr("r", 20); // Grow to target radius
+    }
 
-        runApp();
-    </script>
+    async function runApp() {
+        await prepareVis();
+    }
+
+    runApp();
+  </script>
 </body>
 </html>
